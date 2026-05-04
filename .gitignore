@@ -50,6 +50,7 @@ Thumbs.db
 .cache/
 .pytest_cache/
 .mypy_cache/
+sandbox/
 
 # -----------------------------
 # Jupyter (por si acaso)

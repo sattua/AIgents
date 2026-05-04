@@ -1,18 +1,29 @@
 import subprocess
 import time
+import os
 from models import ExecutionIntent, ExecutionResult
 
 
 class Executor:
 
-    def run(self, intent: ExecutionIntent) -> ExecutionResult:
+    def __init__(self, workspace_dir: str = "sandbox/default", index: int = 0):
+        self.workspace_dir = workspace_dir
+        self.index = index
+        self._ensure_workspace()
+
+    def _ensure_workspace(self):
+        os.makedirs(self.workspace_dir, exist_ok=True)
+
+    def run(self, intent: ExecutionIntent, index: int) -> ExecutionResult:
+        self.index = index
         return self._run_bash(intent.command, intent.timeout)
 
     def _run_bash(self, command: str, timeout: int) -> ExecutionResult:
         start = time.time()
+        print(f"Running command id: {self.index}, at: {start} with timeout: {timeout}s")
         cleaned_command = self.clean_bash(command)
 
-        # 🔒 basic safety
+        # basic safety
         forbidden = ["rm -rf", "shutdown", "reboot", ":(){:|:&};:"]
         for cmd in forbidden:
             if cmd in cleaned_command:
@@ -33,8 +44,14 @@ class Executor:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
+                cwd=self.workspace_dir
             )
+
+
+            print(f"====Process completed, id: {self.index} ====> {process}")
+
+
 
             return ExecutionResult(
                 stdout=process.stdout,
