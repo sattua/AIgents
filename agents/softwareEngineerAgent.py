@@ -154,9 +154,9 @@ class SoftwareEngineerAgent:
                         "You are a strict command generator for a terminal execution system.\n"
                         "NO explanations.\n"
                         "Return ONLY raw executable bash command. No explanations. No markdown.\n"
-                        "No command fences. No comments unless absolutely required for execution.\n"
+                        "No comments.\n"
                         "Output must be directly runnable in a shell or interpreter.\n"
-                        "You may return multiple commands separated by '&&' or new lines if needed.\n"
+                        "You may return multiple commands separated by ' && ', never new lines.\n"
                         "You only create command or commands that can be executed in a terminal."
                         "Your output should be as concise as possible while still being correct and executable.\n"
                             "RULES:\n"
@@ -213,10 +213,10 @@ class SoftwareEngineerAgent:
 
 
     def evolve_intent(self, task, intent, feedback) -> ExecutionIntent:
-        sanitize_command = self.generate_command(f"{task}\n\nFeedback:\n{feedback}")
-        print(f"---- New Command: {sanitize_command} \n End New Command----")
+        new_command = self.generate_command(f"{task}\n\nFeedback:\n{feedback}")
+        print(f"---- New Command: {new_command} \n End New Command----")
 
-        new_command = self.sanitize_command(sanitize_command)
+        new_command = self.sanitize_command(new_command)
 
         return ExecutionIntent(
             command=new_command,
@@ -260,7 +260,7 @@ class SoftwareEngineerAgent:
                 print("\nSTOP: task satisfied")
                 break
 
-            intent = self.evolve_intent(self.task, intent, feedback)
+            intent = self.evolve_intent(analyzed, intent, feedback)
 
         result = ExecutionResult(
             stdout=result.stdout,
