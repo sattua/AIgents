@@ -1,7 +1,10 @@
 import requests
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen2:7b"
+#MODEL = "qwen2:7b"
+MODEL = "llama3.1:latest"
+CODEMODEL = "codellama:latest"
+
 
 
 def call_llm(messages, numPredict=200, temperature=0.3) -> str:

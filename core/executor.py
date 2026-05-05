@@ -2,6 +2,7 @@ import subprocess
 import time
 import os
 from models import ExecutionIntent, ExecutionResult
+from utils.agentUtiles import logStatus
 
 
 class Executor:
@@ -16,12 +17,12 @@ class Executor:
 
     def run(self, intent: ExecutionIntent, index: int) -> ExecutionResult:
         self.index = index
-        return self._run_bash(intent.command, intent.timeout)
+        return self._run_bash(intent)
 
-    def _run_bash(self, command: str, timeout: int) -> ExecutionResult:
+    def _run_bash(self, intent: ExecutionIntent) -> ExecutionResult:
         start = time.time()
-        print(f"Running command id: {self.index}, at: {start} with timeout: {timeout}s")
-        cleaned_command = self.clean_bash(command)
+        print(f"Running command id: {self.index}, at: {start} with timeout: {intent.timeout}s")
+        cleaned_command = self.clean_bash(intent.command)
 
         # basic safety
         forbidden = ["rm -rf", "shutdown", "reboot", ":(){:|:&};:"]
@@ -44,15 +45,16 @@ class Executor:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=timeout,
+                timeout=intent.timeout,
                 cwd=self.workspace_dir
             )
-
-
-            print(f"====Process completed, id: {self.index} ====> {process}")
-
-
-
+            logStatus({
+                "id": self.index,
+                "status": "success",
+                "command": cleaned_command,
+                **(intent.ui_data or {})
+            })
+            print(f"====Process completed: Ran command successfully, id: {self.index}, at: {start} with timeout: {intent.timeout}s")
             return ExecutionResult(
                 stdout=process.stdout,
                 stderr=process.stderr,
@@ -64,6 +66,13 @@ class Executor:
             )
 
         except subprocess.TimeoutExpired:
+            logStatus({
+                "id": self.index,
+                "status": "error, timeout",
+                "command": cleaned_command,
+                **(intent.ui_data or {})
+            })
+            print(f"====Process completed: Error, id: {self.index} ====> timeout")
             return ExecutionResult(
                 stdout="",
                 stderr="Timeout expired",
@@ -72,6 +81,23 @@ class Executor:
                 command=" ".join(cmd),
                 language="bash",
                 timed_out=True
+            )
+        except Exception as e:
+            logStatus({
+                "id": self.index,
+                "status": "error, cli error",
+                "command": cleaned_command,
+                **(intent.ui_data or {})
+            })
+            print(f"====Process completed: Error, id: {self.index} ====> {str(e)}")
+            return ExecutionResult(
+                stdout="",
+                stderr=str(e),
+                exit_code=1,
+                execution_time_ms=int((time.time() - start) * 1000),
+                command=" ".join(cmd),
+                language="bash",
+                timed_out=False
             )
 
     def clean_bash(self, command: str) -> str:

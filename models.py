@@ -20,7 +20,7 @@ class ExecutionResult:
 @dataclass
 class ExecutionIntent:
     command: str
-
+    ui_data: Optional[Dict] = None
     timeout: int = 10
     cwd: Optional[str] = None
     env: Optional[Dict[str, str]] = None

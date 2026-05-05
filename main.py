@@ -16,13 +16,14 @@ def main():
         """
     context = "This is a simple task to test the agent's ability to create and execute a Python script."
     print(f"Task: {task}")
-    
+
     # TODO: create UI interface for windows and linux.
 
     # TODO: Create a pipeline of agents, where one agent creates the script, another agent reviews it, and a third agent executes it and provides feedback. The first agent should then use that feedback to improve the script and try again, until the task is completed successfully or a maximum number of iterations is reached.
     agent = SoftwareEngineerAgent(context=context, task=task)
 
     result: ExecutionResult = agent.doWork()
+    # TODO: exit_code is not the best way to determine if the task was completed successfully, we should analyze the stdout and stderr to determine if the task was completed successfully or if there were errors that need to be addressed.
     if result.exit_code != 0:
         print("Task failed, unknown error.")
         sys.exit(1)
